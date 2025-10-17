@@ -1,0 +1,24 @@
+{
+  "name": "phobos-engine",
+  "version": "1.0.0",
+  "description": "Bot de trading para criptomoedas com Electron",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron ."
+  },
+  "dependencies": {
+    "@binance/connector": "^3.0.0",
+    "axios": "^1.4.0",
+    "cors": "^2.8.5",
+    "discord.js": "^14.23.2",
+    "dotenv": "^16.3.1",
+    "express": "^5.1.0",
+    "technicalindicators": "^3.1.0",
+    "winston": "^3.18.3",
+    "winston-daily-rotate-file": "^5.0.0"
+  },
+  "devDependencies": {
+    "electron": "^25.0.0",
+    "electron-builder": "^26.0.12"
+  }
+}

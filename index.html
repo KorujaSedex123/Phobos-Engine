@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Phobos Engine</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+        <div class="title-container">
+            <img src="./assets/logo.png" alt="Logo Phobos Engine" class="logo-img">
+            <h1>Phobos Engine</h1>
+        </div>
+        
+        <div id="setup">
+            <div class="setup-group">
+                <label for="symbol-select">Escolha um Ativo:</label>
+                <div class="select-wrapper">
+                    <select name="symbols" id="symbol-select">
+                        <option value="">Carregando...</option>
+                    </select>
+                </div>
+            </div>
+            <div class="settings-grid">
+                <div class="input-group">
+                    <label for="rsi-input">RSI Compra (&lt;=)</label>
+                    <input type="number" id="rsi-input" value="30">
+                </div>
+                <div class="input-group">
+                    <label for="tp-input">Take Profit (%)</label>
+                    <input type="number" id="tp-input" value="2">
+                </div>
+                <div class="input-group">
+                    <label for="sl-input">Stop Loss (%)</label>
+                    <input type="number" id="sl-input" value="1">
+                </div>
+                <div class="input-group">
+                    <label for="tsl-input">Trailing Stop (%)</label>
+                    <input type="number" id="tsl-input" value="1.5">
+                </div>
+            </div>
+            <button id="start-button">Iniciar Monitoramento</button>
+        </div>
+        <div id="dashboard" class="hidden">
+            <div class="panel-container">
+                <div class="panel" id="status-panel">
+                    <div class="panel-header">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"></line><line x1="12" y1="20" x2="12" y2="4"></line><line x1="6" y1="20" x2="6" y2="14"></line></svg>
+                        <h2>Status</h2>
+                    </div>
+                    <div id="status-content">
+                        <div class="data-point">
+                            <span class="label">Ativo:</span>
+                            <div class="asset-display">
+                                <img id="asset-icon" src="" alt="Icon" class="hidden">
+                                <strong class="value" id="status-symbol">--</strong>
+                            </div>
+                        </div>
+                        <div class="data-point"><span class="label">RSI:</span><strong class="value" id="status-rsi">--</strong></div>
+                        <div class="data-point"><span class="label">Média Móvel (200):</span><strong class="value" id="status-ma">--</strong></div>
+                        <div class="price-container">
+                            <span class="label">Preço Atual</span>
+                            <div class="price-value" id="status-price">$0.00</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="panel" id="portfolio-panel">
+                    <div class="panel-header">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+                        <h2>Portfólio & Performance</h2>
+                    </div>
+                    <div class="data-point"><span class="label">Saldo USDT (Carteira):</span><span class="value" id="balance-usdt">$0.00</span></div>
+                    <hr>
+                    <div class="data-point"><span class="label">Posição Aberta:</span><strong class="value" id="is-opened">Não</strong></div>
+                    <div class="data-point"><span class="label">Quantidade Comprada:</span><strong class="value" id="position-qty">0.00000000</strong></div>
+                    <div class="data-point"><span class="label">Preço de Compra:</span><span class="value" id="buy-price">$0.00</span></div>
+                    <hr>
+                    <div class="data-point"><span class="label">Lucro Total Realizado:</span><strong class="value" id="total-profit">$0.00</strong></div>
+                    <div class="data-point"><span class="label">Total de Trades:</span><strong class="value" id="stats-total-trades">0</strong></div>
+                    <div class="data-point"><span class="label">Taxa de Acerto:</span><strong class="value" id="stats-win-rate">0%</strong></div>
+                    <div class="data-point"><span class="label">Profit Factor:</span><strong class="value" id="stats-profit-factor">0.00</strong></div>
+                    <button id="action-button" class="hidden"></button>
+                </div>
+            </div>
+            <div class="panel-container">
+                <div class="panel" id="chart-panel">
+                    <div class="panel-header">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21.21 15.89A10 10 0 1 1 8.11 3.99"></path><path d="M22 12A10 10 0 0 0 12 2v10z"></path></svg>
+                        <h2>Gráfico (1M - 100 Períodos)</h2>
+                    </div>
+                    <div class="chart-container">
+                        <canvas id="priceChart"></canvas>
+                    </div>
+                </div>
+                <div class="panel" id="log-panel">
+                    <div class="panel-header">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                        <h2>Logs</h2>
+                    </div>
+                    <div id="logs"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="./renderer.js"></script>
+</body>
+</html>

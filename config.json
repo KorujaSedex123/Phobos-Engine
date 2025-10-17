@@ -1,0 +1,12 @@
+{
+  "symbol": null,
+  "rsiPeriod": 14,
+  "maPeriod": 200,
+  "rsiOversold": 29,
+  "useTrailingStop": true,
+  "takeProfitPercentage": 5,
+  "stopLossPercentage": 2,
+  "trailingStopPercentage": 1.5,
+  "apiUrl": "https://api.binance.com",
+  "checkInterval": 3000
+}

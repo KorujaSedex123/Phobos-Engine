@@ -1,0 +1,23 @@
+# Ficheiro de segredos - NUNCA ENVIE ISTO PARA O GITHUB!
+# Contém as suas chaves de API e outras informações sensíveis.
+.env
+
+# Dependências do Node.js
+# Esta pasta pode conter milhares de ficheiros e é gerada automaticamente
+# com o comando 'npm install'.
+node_modules/
+
+# Logs gerados pelo bot
+# Não são parte do código-fonte e só ocupam espaço.
+logs/
+*.log
+
+# Ficheiros de build e distribuição
+# São o resultado da compilação do seu código, não o código em si.
+dist/
+
+# Ficheiros de cache ou de sistema operativo
+.DS_Store
+Thumbs.db
+
+gitignore
