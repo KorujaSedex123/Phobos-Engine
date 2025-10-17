@@ -52,7 +52,7 @@ Para executar o Phobos Engine, siga os passos abaixo.
 * [Git](https://git-scm.com/)
 
 ### 1. Clonar o Repositório
-```sh
+
 git clone [https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git](https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git)
 cd SEU_REPOSITORIO
 
