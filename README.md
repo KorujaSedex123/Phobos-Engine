@@ -50,7 +50,7 @@ Para executar o Phobos Engine, siga os passos abaixo.
 ### Pré-requisitos
 * [Node.js](https://nodejs.org/) (versão 16 ou superior)
 * [Git](https://git-scm.com/)
-
+```sh
 ### 1. Clonar o Repositório
 
 git clone [https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git](https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git)
