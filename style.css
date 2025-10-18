@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 :root {
     --bg-main: #101419;
     --bg-panel: #1c2128;
@@ -9,6 +10,14 @@
     --color-positive: #2da44e;
     --color-negative: #cf222e;
 }
+
+.toggle-container {
+    display: flex;
+    justify-content: center;
+    gap: 40px;
+    margin-bottom: 30px;
+}
+
 html, body { height: 100%; overflow: hidden; }
 * { box-sizing: border-box; margin: 0; padding: 0; }
 body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-primary); font-size: 14px; display: flex; }
@@ -64,6 +73,15 @@ input[type=number] { -moz-appearance: textfield; }
 #start-button:hover { background-color: #ffdf4d; }
 .positive { color: var(--color-positive) !important; }
 .negative { color: var(--color-negative) !important; }
+.toggle-group { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 30px; color: var(--text-secondary); }
+.switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+.switch input { opacity: 0; width: 0; height: 0; }
+.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #30363d; transition: .4s; }
+.slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; }
+input:checked + .slider { background-color: var(--accent-color); }
+input:checked + .slider:before { transform: translateX(22px); }
+.slider.round { border-radius: 34px; }
+.slider.round:before { border-radius: 50%; }
 #action-button { margin-top: auto; padding: 10px; font-size: 14px; font-weight: 600; border-radius: 6px; cursor: pointer; transition: all 0.2s ease; }
 #action-button.liquidate { border: 1px solid var(--color-negative); background-color: transparent; color: var(--color-negative); }
 #action-button.liquidate:hover { background-color: var(--color-negative); color: var(--text-primary); }

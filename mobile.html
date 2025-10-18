@@ -5,55 +5,144 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Phobos Engine - Status</title>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #101419; color: #e6edf3; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: auto; }
-        h1 { color: #f1b30a; text-align: center; font-weight: 500; margin-bottom: 20px; }
-        .panel { background-color: #1c2128; border: 1px solid #30363d; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
-        .data-point { display: flex; justify-content: space-between; padding: 12px 0; border-bottom: 1px solid #30363d; font-size: 1.1em; }
-        .data-point:last-child { border-bottom: none; }
-        .label { color: #7d8590; }
-        .value { font-weight: 600; }
-        .positive { color: #2da44e !important; }
-        .negative { color: #cf222e !important; }
+        :root {
+            --bg-main: #101419;
+            --bg-panel: #1c2128;
+            --border-color: #30363d;
+            --text-primary: #e6edf3;
+            --text-secondary: #7d8590;
+            --accent-color: #f1b30a;
+            --color-positive: #2da44e;
+            --color-negative: #cf222e;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--bg-main);
+            color: var(--text-primary);
+            margin: 0;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 600px;
+            margin: auto;
+        }
+
+        h1 {
+            color: var(--accent-color);
+            text-align: center;
+            font-weight: 500;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+            letter-spacing: 1px;
+        }
+
+        .panel {
+            background-color: var(--bg-panel);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+
+        .panel-title {
+            font-size: 1.1em;
+            font-weight: 500;
+            color: var(--text-primary);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-point {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            font-size: 1em;
+        }
+
+        .data-point:not(:last-child) {
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .label {
+            color: var(--text-secondary);
+        }
+
+        .value {
+            font-weight: 600;
+        }
+        
+        #price {
+            font-size: 1.2em;
+            transition: color 0.3s ease;
+        }
+
+        .positive { color: var(--color-positive) !important; }
+        .negative { color: var(--color-negative) !important; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>Phobos Engine</h1>
         <div class="panel" id="status-panel">
+            <h2 class="panel-title">📊 Status</h2>
             <div class="data-point"><span class="label">Ativo</span><span class="value" id="symbol">--</span></div>
             <div class="data-point"><span class="label">Preço Atual</span><span class="value" id="price">$0.00</span></div>
             <div class="data-point"><span class="label">RSI</span><span class="value" id="rsi">--</span></div>
+            <div class="data-point"><span class="label">Média Móvel</span><span class="value" id="ma">--</span></div>
         </div>
         <div class="panel" id="portfolio-panel">
+            <h2 class="panel-title">💼 Portfólio</h2>
             <div class="data-point"><span class="label">Posição Aberta</span><span class="value" id="isOpened">Não</span></div>
             <div class="data-point"><span class="label">Preço de Compra</span><span class="value" id="buyPrice">$0.00</span></div>
-            <div class="data-point"><span class="label">Lucro Total</span><span class="value" id="totalProfit">$0.00</span></div>
+            <div class="data-point"><span class="label">Lucro Total (Sessão)</span><span class="value" id="totalProfit">$0.00</span></div>
         </div>
     </div>
 
     <script>
+        let lastPrice = 0;
+
         async function fetchData() {
             try {
-                // A URL agora é relativa, pois acessaremos pela ponte do ngrok
-                const response = await fetch(`/data`);
+                const response = await fetch('/data');
                 const data = await response.json();
 
                 if (data && data.symbol) {
+                    // Atualiza Painel de Status
                     document.getElementById('symbol').innerText = data.symbol;
                     document.getElementById('price').innerText = `$${data.price.toFixed(2)}`;
                     document.getElementById('rsi').innerText = data.lastRsi.toFixed(2);
+                    document.getElementById('ma').innerText = `$${data.lastSma.toFixed(2)}`;
+
+                    // Lógica de cor para o preço
+                    const priceEl = document.getElementById('price');
+                    priceEl.classList.remove('positive', 'negative');
+                    if (data.price > lastPrice && lastPrice !== 0) priceEl.classList.add('positive');
+                    if (data.price < lastPrice) priceEl.classList.add('negative');
+                    lastPrice = data.price;
+
+                    // Atualiza Painel de Portfólio
                     document.getElementById('isOpened').innerText = data.portfolio.isOpened ? 'Sim' : 'Não';
                     document.getElementById('buyPrice').innerText = `$${data.portfolio.lastBuyPrice.toFixed(2)}`;
-                    document.getElementById('totalProfit').innerText = `$${data.portfolio.totalProfitUsdt.toFixed(2)}`;
+                    const totalProfitEl = document.getElementById('totalProfit');
+                    totalProfitEl.innerText = `$${data.portfolio.totalProfitUsdt.toFixed(2)}`;
+                    
+                    totalProfitEl.classList.remove('positive', 'negative');
+                    if (data.portfolio.totalProfitUsdt > 0) totalProfitEl.classList.add('positive');
+                    if (data.portfolio.totalProfitUsdt < 0) totalProfitEl.classList.add('negative');
                 }
             } catch (error) {
                 console.error('Erro ao buscar dados:', error);
                 document.getElementById('symbol').innerText = 'Erro de conexão';
             }
         }
+
+        // Busca os dados a cada 5 segundos
         setInterval(fetchData, 5000);
-        fetchData();
+        fetchData(); // Busca imediatamente na primeira vez
     </script>
 </body>
 </html>

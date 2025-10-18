@@ -6,6 +6,7 @@ const rsiInput = document.getElementById('rsi-input');
 const tpInput = document.getElementById('tp-input');
 const slInput = document.getElementById('sl-input');
 const tslInput = document.getElementById('tsl-input');
+const trailingStopToggle = document.getElementById('trailing-stop-toggle');
 const logContainer = document.getElementById('logs');
 const statusSymbolEl = document.getElementById('status-symbol');
 const statusRsiEl = document.getElementById('status-rsi');
@@ -21,6 +22,7 @@ const assetIcon = document.getElementById('asset-icon');
 const statsTotalTradesEl = document.getElementById('stats-total-trades');
 const statsWinRateEl = document.getElementById('stats-win-rate');
 const statsProfitFactorEl = document.getElementById('stats-profit-factor');
+const maFilterToggle = document.getElementById('ma-filter-toggle');
 
 let lastPrice = 0;
 
@@ -37,6 +39,8 @@ ipcRenderer.on('config-loaded', (event, config) => {
     tpInput.value = config.takeProfitPercentage;
     slInput.value = config.stopLossPercentage;
     tslInput.value = config.trailingStopPercentage;
+    trailingStopToggle.checked = config.useTrailingStop;
+    maFilterToggle.checked = config.useMaFilter;
 });
 
 ipcRenderer.on('symbols-loaded', (event, symbols) => {
@@ -57,7 +61,9 @@ startButton.addEventListener('click', () => {
             rsiOversold: parseInt(rsiInput.value, 10),
             takeProfitPercentage: parseFloat(tpInput.value),
             stopLossPercentage: parseFloat(slInput.value),
-            trailingStopPercentage: parseFloat(tslInput.value)
+            trailingStopPercentage: parseFloat(tslInput.value),
+            useTrailingStop: trailingStopToggle.checked,
+            useMaFilter: maFilterToggle.checked
         };
         document.getElementById('setup').classList.add('hidden');
         document.getElementById('dashboard').classList.remove('hidden');
@@ -89,13 +95,13 @@ ipcRenderer.on('update-data', (event, data) => {
     const baseAsset = symbol ? symbol.replace("USDT", "") : '';
 
     if (baseAsset) {
-        assetIcon.src = './assets/default.png'; // Aponta diretamente para o seu ícone padrão
-        assetIcon.onerror = null; // Remove qualquer lógica de erro, pois não é necessária
+        assetIcon.src = `./assets/default.png`;
+        assetIcon.onerror = null;
         assetIcon.classList.remove('hidden');
     } else {
         assetIcon.classList.add('hidden');
     }
-    
+
     if (price && lastRsi && symbol && lastSma !== undefined) {
         statusPriceEl.classList.remove('positive', 'negative');
         if (price > lastPrice && lastPrice !== 0) statusPriceEl.classList.add('positive');
@@ -119,6 +125,7 @@ ipcRenderer.on('update-data', (event, data) => {
         const usdtBalance = balances.find(b => b.asset === 'USDT')?.free || 0;
         balanceUsdtEl.textContent = `$${parseFloat(usdtBalance).toFixed(2)}`;
     }
+    const actionButton = document.getElementById('action-button');
     if (portfolio && portfolio.isOpened) {
         actionButton.textContent = 'Liquidar Posição';
         actionButton.className = 'liquidate';

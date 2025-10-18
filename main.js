@@ -1,4 +1,5 @@
 const { app, BrowserWindow, ipcMain } = require('electron');
+const fs = require('fs');
 require('dotenv').config();
 let config = require('./config.json');
 const { Spot } = require('@binance/connector');
@@ -7,7 +8,35 @@ const axios = require("axios");
 const path = require('path');
 const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 
-// --- Lógica de Notificações e Comandos do Discord (sem alterações) ---
+const STATE_FILE_PATH = path.join(app.getPath('userData'), 'state.json');
+
+function saveState() {
+    const state = { portfolio, sessionSettings, isMonitoringActive, sessionStats };
+    try {
+        fs.writeFileSync(STATE_FILE_PATH, JSON.stringify(state, null, 2));
+    } catch (error) {
+        console.error("Erro ao salvar o estado:", error);
+    }
+}
+
+function loadState() {
+    try {
+        if (fs.existsSync(STATE_FILE_PATH)) {
+            const rawData = fs.readFileSync(STATE_FILE_PATH);
+            const state = JSON.parse(rawData);
+
+            // Carrega os dados, com valores padrão para segurança
+            portfolio = state.portfolio || portfolio;
+            sessionSettings = state.sessionSettings || sessionSettings;
+            isMonitoringActive = state.isMonitoringActive || false;
+            sessionStats = state.sessionStats || sessionStats;
+
+            console.log("Estado anterior carregado com sucesso.");
+        }
+    } catch (error) {
+        console.error("Erro ao carregar o estado:", error);
+    }
+}
 const discordToken = process.env.DISCORD_BOT_TOKEN;
 const userId = process.env.DISCORD_USER_ID;
 const discordClient = new Client({ intents: [GatewayIntentBits.Guilds, GatewayIntentBits.DirectMessages, GatewayIntentBits.MessageContent] });
@@ -19,7 +48,7 @@ if (discordToken && userId) {
         try {
             notificationTarget = await discordClient.users.fetch(userId);
             console.log(`Bot de notificações/comandos conectado ao Discord. A ouvir o utilizador ID: ${userId}`);
-            sendNotification({ type: 'info', title: 'Phobos Engine Online', message: 'Aplicação de desktop iniciada. Estou online e pronto para receber comandos de informação.' });
+            sendNotification({ type: 'info', title: 'Phobos Engine Online', message: 'Aplicação de desktop iniciada. Estou online.' });
         } catch (error) {
             console.error(`Erro ao buscar o alvo de notificação do Discord: ${error.message}`);
         }
@@ -50,13 +79,7 @@ let portfolio = { cryptoBalance: 0, isOpened: false, lastBuyPrice: 0, totalProfi
 let monitorInterval;
 let isMonitoringActive = false;
 let sessionSettings = {};
-let sessionStats = {
-    totalTrades: 0,
-    wins: 0,
-    losses: 0,
-    totalProfit: 0,
-    totalLoss: 0
-};
+let sessionStats = { totalTrades: 0, wins: 0, losses: 0, totalProfit: 0, totalLoss: 0 };
 
 function floorToDecimal(num, decimals) {
     const factor = Math.pow(10, decimals);
@@ -71,8 +94,14 @@ function createWindow() {
     });
     mainWindow.loadFile('index.html');
     mainWindow.webContents.on('did-finish-load', () => {
+        loadState();
         init();
         mainWindow.webContents.send('config-loaded', config);
+
+        if (isMonitoringActive && sessionSettings.symbol) {
+            console.log("Reiniciando monitoramento a partir do estado salvo.");
+            ipcMain.emit('start-monitoring', null, sessionSettings);
+        }
     });
 }
 
@@ -111,57 +140,74 @@ async function getTradeFilters(symbol) {
     }
 }
 
-async function liquidatePosition() {
-    const symbol = sessionSettings.symbol;
+async function liquidatePosition(reason = "MANUAL") {
+    // As duas linhas erradas foram removidas daqui
+    const symbol = sessionSettings.symbol; // Agora esta é a primeira linha
     if (portfolio.isOpened && portfolio.cryptoBalance > 0 && symbol) {
-        if (mainWindow) mainWindow.webContents.send('log-message', '🔴 Liquidando posição...');
+
+        // ***** INÍCIO DA CORREÇÃO *****
+        // Garante que 'baseAsset' seja definido ANTES de ser usado
+        const baseAsset = symbol.replace('USDT', '');
+        // ***** FIM DA CORREÇÃO *****
+
+        if (mainWindow) mainWindow.webContents.send('log-message', `🔴 Liquidando posição... (Razão: ${reason})`);
         try {
-            const baseAsset = symbol.replace('USDT', '');
+            // A definição de 'baseAsset' foi movida para cima, para fora do 'try'
             const filters = await getTradeFilters(symbol);
             if (!filters) {
                 mainWindow.webContents.send('log-message', '❌ Não foi possível obter filtros para liquidar.');
                 return;
             };
             const accountInfo = await client.account();
+            // Esta linha agora funciona, pois 'baseAsset' existe
             const cryptoBalance = parseFloat(accountInfo.data.balances.find(b => b.asset === baseAsset).free);
-            if (cryptoBalance > filters.minQty) {
+            const klinesResponse = await axios.get(`${config.apiUrl}/api/v3/klines?limit=1&interval=1m&symbol=${symbol}`);
+            const currentPrice = parseFloat(klinesResponse.data[0][4]);
+            const positionValue = currentPrice * cryptoBalance;
+
+            if (positionValue < filters.minNotional) {
+                if (mainWindow) mainWindow.webContents.send('log-message', `AVISO: Posição ($${positionValue.toFixed(2)}) muito pequena para vender. Resetando.`);
+            } else if (cryptoBalance > filters.minQty) {
                 const finalQuantity = floorToDecimal(cryptoBalance, filters.precision);
                 const order = await client.newOrder(symbol, 'SELL', 'MARKET', { quantity: finalQuantity });
 
                 if (order && order.data && parseFloat(order.data.executedQty) > 0) {
-                    const profit = (parseFloat(order.data.cummulativeQuoteQty) - (portfolio.lastBuyPrice * portfolio.cryptoBalance));
+                    const quantitySold = parseFloat(order.data.executedQty);
+                    const costOfSoldQty = portfolio.lastBuyPrice * quantitySold;
+                    const revenueFromSale = parseFloat(order.data.cummulativeQuoteQty);
+                    const profit = revenueFromSale - costOfSoldQty;
                     portfolio.totalProfitUsdt += profit;
+
                     sessionStats.totalTrades++;
-                    if (profit > 0) {
-                        sessionStats.wins++;
-                        sessionStats.totalProfit += profit;
-                    } else {
-                        sessionStats.losses++;
-                        sessionStats.totalLoss += Math.abs(profit); // Usamos o valor absoluto da perda
-                    }
-                    sendNotification({ type: profit > 0 ? 'profit' : 'loss', title: '✅ Posição Liquidada', message: `**Ativo:** ${symbol}\n**Resultado:** $${profit.toFixed(2)}` });
+                    if (profit > 0) { sessionStats.wins++; sessionStats.totalProfit += profit; }
+                    else { sessionStats.losses++; sessionStats.totalLoss += Math.abs(profit); }
+
+                    sendNotification({ type: profit > 0 ? 'profit' : 'loss', title: `✅ Posição Liquidada (${reason})`, message: `**Ativo:** ${symbol}\n**Resultado:** $${profit.toFixed(2)}` });
+                    saveState(); // Assumindo que você adicionou a função saveState() que sugeri
                     if (mainWindow) mainWindow.webContents.send('log-message', '✅ Posição liquidada com sucesso.');
                 }
             } else {
-                if (mainWindow) mainWindow.webContents.send('log-message', 'Sem saldo suficiente na corretora para liquidar.');
+                if (mainWindow) mainWindow.webContents.send('log-message', 'Sem saldo livre na corretora para liquidar.');
             }
         } catch (error) {
             const errorMessage = error.response ? error.response.data.msg : error.message;
             sendNotification({ type: 'error', title: '❌ Falha na Liquidação', message: `**Ativo:** ${symbol}\n**Detalhe:** ${errorMessage}` });
-            if (mainWindow) mainWindow.webContents.send('log-message', `❌ Erro ao liquidar posição: ${errorMessage}`);
-        } finally {
-            portfolio.isOpened = false;
-            portfolio.cryptoBalance = 0;
-            portfolio.lastBuyPrice = 0;
-            portfolio.peakPrice = 0;
-            if (mainWindow) mainWindow.webContents.send('update-data', { portfolio, isMonitoringActive });
+            if (mainWindow) mainWindow.webContents.send('log-message', `❌ Erro ao liquidar posição: ${errorMessage}. A posição continua aberta.`);
+            return;
         }
+
+        portfolio.isOpened = false;
+        portfolio.cryptoBalance = 0;
+        portfolio.lastBuyPrice = 0;
+        portfolio.peakPrice = 0;
+        saveState(); // Salva o estado de "posição fechada"
+        if (mainWindow) mainWindow.webContents.send('update-data', { portfolio, isMonitoringActive, sessionStats });
     }
 }
 
 async function monitor() {
     if (!isMonitoringActive) return;
-    const { symbol, rsiPeriod, rsiOversold, takeProfitPercentage, stopLossPercentage, maPeriod, useTrailingStop, trailingStopPercentage } = sessionSettings;
+    const { symbol, rsiPeriod, rsiOversold, takeProfitPercentage, stopLossPercentage, maPeriod, useMaFilter, useTrailingStop, trailingStopPercentage } = sessionSettings;
     if (!symbol) return;
 
     try {
@@ -176,10 +222,12 @@ async function monitor() {
         const smaValues = SMA.calculate({ period: maPeriod, values: closePrices });
         const lastSma = smaValues[smaValues.length - 1];
 
-        mainWindow.webContents.send('update-data', { price, lastRsi, lastSma, portfolio, symbol, balances, klines, isMonitoringActive, sessionStats })
+        mainWindow.webContents.send('update-data', { price, lastRsi, lastSma, portfolio, symbol, balances, klines, isMonitoringActive, sessionStats });
 
-        if (lastRsi <= rsiOversold && !portfolio.isOpened && price > lastSma) {
-            mainWindow.webContents.send('log-message', `[COMPRA] Condições atingidas: RSI (${lastRsi.toFixed(2)}) <= ${rsiOversold} E Preço (${price.toFixed(2)}) > MA(${lastSma.toFixed(2)})`);
+        const rsiCondition = lastRsi <= rsiOversold;
+        const maCondition = !useMaFilter || (useMaFilter && price > lastSma);
+
+        if (rsiCondition && maCondition && !portfolio.isOpened) {
             const usdtBalance = parseFloat(balances.find(b => b.asset === 'USDT').free);
             const filters = await getTradeFilters(symbol);
             if (!filters) return;
@@ -206,55 +254,34 @@ async function monitor() {
                 portfolio.cryptoBalance = parseFloat(order.data.executedQty);
                 portfolio.peakPrice = portfolio.lastBuyPrice;
                 sendNotification({ type: 'buy', title: '✅ COMPRA REALIZADA', message: `**Ativo:** ${symbol}\n**Quantidade:** ${portfolio.cryptoBalance.toFixed(8)}\n**Preço:** $${portfolio.lastBuyPrice.toFixed(2)}` });
+                saveState();
             } else {
                 mainWindow.webContents.send('log-message', '⚠️ AVISO: Ordem de compra enviada, mas não foi executada/preenchida.');
                 portfolio.isOpened = false;
             }
         } else if (portfolio.isOpened) {
-            const takeProfitPrice = portfolio.lastBuyPrice * (1 + takeProfitPercentage / 100);
-            const stopLossPrice = portfolio.lastBuyPrice * (1 - stopLossPercentage / 100);
             let reason = null;
             if (useTrailingStop) {
-                // 1. Atualiza o preço máximo atingido
-                if (price > portfolio.peakPrice) {
-                    portfolio.peakPrice = price;
-                }
-
-                // 2. Calcula o alvo do Trailing Stop
+                if (price > portfolio.peakPrice) { portfolio.peakPrice = price; }
                 const trailingStopPrice = portfolio.peakPrice * (1 - trailingStopPercentage / 100);
-
-                // 3. Verifica se o preço caiu abaixo do alvo do Trailing Stop
-                if (price <= trailingStopPrice) {
-                    reason = 'TRAILING STOP';
-                }
+                if (price <= trailingStopPrice) { reason = 'TRAILING STOP'; }
             } else {
-                // Lógica antiga de TP/SL se o trailing estiver desativado
                 const takeProfitPrice = portfolio.lastBuyPrice * (1 + takeProfitPercentage / 100);
                 const stopLossPrice = portfolio.lastBuyPrice * (1 - stopLossPercentage / 100);
                 if (price >= takeProfitPrice) reason = 'TAKE PROFIT';
                 if (price <= stopLossPrice) reason = 'STOP LOSS';
             }
-
             if (reason) {
                 mainWindow.webContents.send('log-message', `[VENDA] Condição de ${reason} atingida.`);
                 await liquidatePosition(reason);
             } else {
                 const currentProfit = (price * portfolio.cryptoBalance) - (portfolio.lastBuyPrice * portfolio.cryptoBalance);
+                let logMsg = `[AGUARDANDO VENDA] Lucro não realizado: $${currentProfit.toFixed(2)}.`;
                 if (useTrailingStop) {
                     const trailingStopPrice = portfolio.peakPrice * (1 - trailingStopPercentage / 100);
-                    mainWindow.webContents.send('log-message', `[AGUARDANDO VENDA] Lucro não realizado: $${currentProfit.toFixed(2)}. Alvo Trailing: < $${trailingStopPrice.toFixed(2)}`);
-                } else {
-                    mainWindow.webContents.send('log-message', `[AGUARDANDO VENDA] Lucro não realizado: $${currentProfit.toFixed(2)}`);
+                    logMsg += ` Alvo Trailing: < $${trailingStopPrice.toFixed(2)}`;
                 }
-            }
-            if (price >= takeProfitPrice) reason = 'TAKE PROFIT';
-            if (price <= stopLossPrice) reason = 'STOP LOSS';
-            if (reason) {
-                mainWindow.webContents.send('log-message', `[VENDA] Condição de ${reason} atingida.`);
-                await liquidatePosition();
-            } else {
-                const currentProfit = (price * portfolio.cryptoBalance) - (portfolio.lastBuyPrice * portfolio.cryptoBalance);
-                mainWindow.webContents.send('log-message', `[AGUARDANDO VENDA] Lucro não realizado: $${currentProfit.toFixed(2)}`);
+                mainWindow.webContents.send('log-message', logMsg);
             }
         } else {
             let reason = '';
@@ -267,12 +294,15 @@ async function monitor() {
         sendNotification({ type: 'error', title: '❌ Erro no Monitoramento', message: `**Detalhe:** ${errorMessage}` });
         mainWindow.webContents.send('log-message', `❌ Erro no monitoramento: ${errorMessage}`);
     }
+    if (isMonitoringActive) {
+        setTimeout(monitor, config.checkInterval);
+    }
 }
 
 ipcMain.on('start-monitoring', async (event, settings) => {
     portfolio = { cryptoBalance: 0, isOpened: false, lastBuyPrice: 0, totalProfitUsdt: 0, peakPrice: 0 };
-    sessionSettings = { ...settings, maPeriod: config.maPeriod, rsiPeriod: config.rsiPeriod, useTrailingStop: config.useTrailingStop };
     sessionStats = { totalTrades: 0, wins: 0, losses: 0, totalProfit: 0, totalLoss: 0 };
+    sessionSettings = { ...settings, maPeriod: config.maPeriod, rsiPeriod: config.rsiPeriod };
     client = new Spot(apiKey, apiSecret, { baseURL: config.apiUrl });
     mainWindow.webContents.send('log-message', `Ativo ${settings.symbol} selecionado.`);
     mainWindow.webContents.send('log-message', `Buscando informações da carteira...`);
@@ -303,9 +333,9 @@ ipcMain.on('start-monitoring', async (event, settings) => {
         }
         isMonitoringActive = true;
         mainWindow.webContents.send('log-message', `Saldo OK. Iniciando monitoramento...`);
-        if (monitorInterval) clearInterval(monitorInterval);
+        saveState();
+
         monitor();
-        monitorInterval = setInterval(() => monitor(), config.checkInterval);
     } catch (error) {
         const errorMessage = error.response ? error.response.data.msg : error.message;
         sendNotification({ type: 'error', title: '❌ Erro na Inicialização da Conta', message: `**Detalhe:** ${errorMessage}` });
@@ -317,9 +347,9 @@ ipcMain.on('primary-action-button-clicked', async () => {
     if (portfolio.isOpened) {
         await liquidatePosition();
     } else if (isMonitoringActive) {
-        if (monitorInterval) clearInterval(monitorInterval);
         isMonitoringActive = false;
-        portfolio = { cryptoBalance: 0, isOpened: false, lastBuyPrice: 0, totalProfitUsdt: portfolio.totalProfitUsdt };
+        saveState();
+        portfolio = { ...portfolio, isOpened: false, cryptoBalance: 0, lastBuyPrice: 0, peakPrice: 0 };
         sendNotification({ type: 'info', title: '⏹️ Monitoramento Parado', message: 'O monitoramento foi parado manualmente pelo utilizador.' });
         mainWindow.webContents.send('log-message', '⏹️ Monitoramento parado pelo usuário.');
         mainWindow.webContents.send('update-data', { portfolio, isMonitoringActive });
@@ -334,7 +364,6 @@ app.on('before-quit', async (event) => {
     }
 });
 
-// --- OUVINTE DE COMANDOS DO DISCORD (APENAS INFORMAÇÃO) ---
 discordClient.on('messageCreate', async message => {
     if (message.author.bot || message.author.id !== userId) return;
     if (!message.content.startsWith('!')) return;
