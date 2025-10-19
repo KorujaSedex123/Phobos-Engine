@@ -1,0 +1,19 @@
+
+{
+  "symbol": "BTCUSDT", 
+  "startDate": "2025-10-01", 
+  "endDate": "2025-10-18",   
+  "initialCapital": 11, 
+  "strategy": {            
+    "rsiPeriod": 14,
+    "maPeriod": 200,
+    "rsiOversold": 29,
+    "useTrailingStop": false,
+    "useMaFilter": true,
+    "useMaExitFilter": false,
+    "takeProfitPercentage": 5,
+    "stopLossPercentage": 2,
+    "trailingStopPercentage": 1.5
+
+  }
+}

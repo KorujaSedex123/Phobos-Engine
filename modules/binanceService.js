@@ -14,7 +14,52 @@ function init() {
     }
     client = new Spot(apiKey, apiSecret, { baseURL: config.apiUrl });
 }
+async function getHistoricalKlines(symbol, interval, startTime, endTime) {
+    const limit = 1000; // Limite máximo da API por requisição
+    let allKlines = [];
+    let currentStartTime = startTime;
 
+    console.log(`Buscando dados históricos para ${symbol} de ${new Date(startTime).toISOString()} até ${new Date(endTime).toISOString()}...`);
+
+    while (currentStartTime < endTime) {
+        try {
+            const response = await axios.get(`${config.apiUrl}/api/v3/klines`, {
+                params: {
+                    symbol: symbol,
+                    interval: interval,
+                    startTime: currentStartTime,
+                    endTime: endTime, // Limita a busca até o fim desejado
+                    limit: limit
+                }
+            });
+
+            const klines = response.data;
+            if (klines.length === 0) {
+                break; // Sem mais dados no período
+            }
+
+            allKlines = allKlines.concat(klines);
+            currentStartTime = klines[klines.length - 1][0] + 1; // Próxima busca começa após o último kline recebido
+
+            console.log(` -> Recebidos ${klines.length} klines. Último timestamp: ${new Date(currentStartTime - 1).toISOString()}`);
+
+            // Pequena pausa para evitar limites de API
+            await new Promise(resolve => setTimeout(resolve, 300));
+
+            // Se a última resposta retornou menos que o limite, provavelmente chegamos ao fim
+            if (klines.length < limit) {
+                break;
+            }
+
+        } catch (error) {
+            const errorMsg = error.response?.data?.msg || error.message || "Erro desconhecido";
+            console.error(`Erro ao buscar klines históricos: ${errorMsg}`);
+            throw error; // Propaga o erro para o script principal
+        }
+    }
+    console.log(`Total de klines históricos para ${symbol}: ${allKlines.length}`);
+    return allKlines;
+}
 // Criamos "wrappers" para cada chamada de API
 async function getAccountInfo() {
     return client.account();
@@ -73,14 +118,15 @@ async function getSymbolRSI(symbol) {
     return klines.data.map(k => parseFloat(k[4]));
 }
 
-module.exports = { 
-    init, 
-    getAccountInfo, 
-    getTradeFilters, 
-    getKlines, 
-    getLatestPrice,
-    placeOrder,
-    getSymbolList,
-    getSymbolTicker,
-    getSymbolRSI
+module.exports = {
+    init,
+    getAccountInfo,
+    getTradeFilters,
+    getKlines, // Mantém a busca de klines recentes para o bot ao vivo
+    getLatestPrice,
+    placeOrder,
+    getSymbolList,
+    getSymbolTicker,
+    getSymbolRSI,
+    getHistoricalKlines // Exporta a nova função
 };
