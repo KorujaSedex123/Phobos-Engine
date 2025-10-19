@@ -23,12 +23,45 @@ const statsTotalTradesEl = document.getElementById('stats-total-trades');
 const statsWinRateEl = document.getElementById('stats-win-rate');
 const statsProfitFactorEl = document.getElementById('stats-profit-factor');
 const maFilterToggle = document.getElementById('ma-filter-toggle');
+const maExitFilterToggle = document.getElementById('ma-exit-filter-toggle');
 
 let lastPrice = 0;
 
 const ctx = document.getElementById('priceChart').getContext('2d');
-const priceChart = new Chart(ctx, { type: 'line', data: { labels: [], datasets: [{ label: 'Preço', data: [], borderColor: '#f1b30a', backgroundColor: 'rgba(241, 179, 10, 0.1)', borderWidth: 2, pointRadius: 0, tension: 0.1, fill: true }] }, options: { responsive: true, maintainAspectRatio: false, scales: { x: { ticks: { color: '#7d8590', maxRotation: 0, autoSkip: true, maxTicksLimit: 7 }, grid: { color: 'rgba(125, 133, 144, 0.1)' } }, y: { ticks: { color: '#7d8590' }, grid: { color: 'rgba(125, 133, 144, 0.1)' }, suggestedMin: 0, suggestedMax: 100 } }, plugins: { legend: { display: false } } } });
-
+const priceChart = new Chart(ctx, {
+    type: 'line', // Tipo correto?
+    data: {
+        labels: [], // Começa vazio, correto
+        datasets: [{
+            label: 'Preço',
+            data: [], // Começa vazio, correto
+            borderColor: '#f1b30a',
+            backgroundColor: 'rgba(241, 179, 10, 0.1)',
+            borderWidth: 2,
+            pointRadius: 0,
+            tension: 0.1,
+            fill: true
+        }]
+    },
+    options: {
+        responsive: true,
+        maintainAspectRatio: false, // ESSENCIAL para preencher o container
+        scales: {
+            x: {
+                ticks: { color: '#7d8590', maxRotation: 0, autoSkip: true, maxTicksLimit: 7 },
+                grid: { color: 'rgba(125, 133, 144, 0.1)' }
+            },
+            y: {
+                ticks: { color: '#7d8590' },
+                grid: { color: 'rgba(125, 133, 144, 0.1)' }
+                // REMOVEMOS suggestedMin/Max
+            }
+        },
+        plugins: {
+            legend: { display: false }
+        }
+    }
+});
 const p = document.createElement('p');
 p.textContent = `[${new Date().toLocaleTimeString()}] Bem-vindo ao Phobos Engine! Por favor, selecione um ativo para iniciar.`;
 p.className = 'log-default';
@@ -41,6 +74,7 @@ ipcRenderer.on('config-loaded', (event, config) => {
     tslInput.value = config.trailingStopPercentage;
     trailingStopToggle.checked = config.useTrailingStop;
     maFilterToggle.checked = config.useMaFilter;
+    maExitFilterToggle.checked = config.useMaExitFilter;
 });
 
 ipcRenderer.on('symbols-loaded', (event, symbols) => {
@@ -63,7 +97,8 @@ startButton.addEventListener('click', () => {
             stopLossPercentage: parseFloat(slInput.value),
             trailingStopPercentage: parseFloat(tslInput.value),
             useTrailingStop: trailingStopToggle.checked,
-            useMaFilter: maFilterToggle.checked
+            useMaFilter: maFilterToggle.checked,
+            useMaExitFilter: maExitFilterToggle.checked
         };
         document.getElementById('setup').classList.add('hidden');
         document.getElementById('dashboard').classList.remove('hidden');
@@ -93,79 +128,99 @@ ipcRenderer.on('log-message', (event, message) => {
 // renderer.js
 
 ipcRenderer.on('update-data', (event, data) => {
-    // Desestrutura os dados principais
-    const { price, lastRsi, lastSma, portfolio, balances, klines, isMonitoringActive, sessionStats } = data;
-    
-    // ***** INÍCIO DA CORREÇÃO *****
-    // Puxa o 'symbol' de dentro do 'sessionSettings'
-    const { symbol } = data.sessionSettings || {}; 
-    // ***** FIM DA CORREÇÃO *****
+    // Desestrutura os dados principais
+    const { price, lastRsi, lastSma, portfolio, balances, klines, isMonitoringActive, sessionStats } = data;
 
-    const baseAsset = symbol ? symbol.replace("USDT", "") : '';
+    // ***** INÍCIO DA CORREÇÃO *****
+    // Puxa o 'symbol' de dentro do 'sessionSettings'
+    const { symbol } = data.sessionSettings || {};
+    // ***** FIM DA CORREÇÃO *****
 
-    if (baseAsset) {
-        assetIcon.src = `./assets/default.png`; // Você precisará ter essa pasta/imagem
-        assetIcon.onerror = () => { assetIcon.src = './assets/default.png'; }; // Fallback
-        assetIcon.classList.remove('hidden');
-    } else {
-        assetIcon.classList.add('hidden');
-    }
+    const baseAsset = symbol ? symbol.replace("USDT", "") : '';
+
+    if (baseAsset) {
+        assetIcon.src = `./assets/default.png`; // Você precisará ter essa pasta/imagem
+        assetIcon.onerror = () => { assetIcon.src = './assets/default.png'; }; // Fallback
+        assetIcon.classList.remove('hidden');
+    } else {
+        assetIcon.classList.add('hidden');
+    }
 
     // Esta verificação agora vai funcionar
-    if (price !== undefined && lastRsi !== undefined && symbol && lastSma !== undefined) { 
-        statusPriceEl.classList.remove('positive', 'negative');
-        if (price > lastPrice && lastPrice !== 0) statusPriceEl.classList.add('positive');
-        if (price < lastPrice) statusPriceEl.classList.add('negative');
-        
-        lastPrice = price;
-        statusSymbolEl.textContent = symbol;
-        statusRsiEl.textContent = lastRsi.toFixed(2);
-        statusMaEl.textContent = `$${lastSma.toFixed(2)}`;
-        statusPriceEl.textContent = `$${price.toFixed(2)}`;
-    }
-    if (portfolio) {
-        isOpenedEl.textContent = portfolio.isOpened ? 'Sim' : 'Não';
-        positionQtyEl.textContent = portfolio.cryptoBalance.toFixed(8);
-        buyPriceEl.textContent = `$${portfolio.lastBuyPrice.toFixed(2)}`;
-        totalProfitEl.textContent = `$${portfolio.totalProfitUsdt.toFixed(2)}`;
-        totalProfitEl.classList.remove('positive', 'negative');
-        if (portfolio.totalProfitUsdt > 0) totalProfitEl.classList.add('positive');
-        if (portfolio.totalProfitUsdt < 0) totalProfitEl.classList.add('negative');
-    }
-    if (balances) {
-        const usdtBalance = balances.find(b => b.asset === 'USDT')?.free || 0;
-        balanceUsdtEl.textContent = `$${parseFloat(usdtBalance).toFixed(2)}`;
-    }
-    const actionButton = document.getElementById('action-button');
-    if (portfolio && portfolio.isOpened) {
-        actionButton.textContent = 'Liquidar Posição';
-        actionButton.className = 'liquidate';
-        actionButton.classList.remove('hidden');
-    } else if (isMonitoringActive) {
-        actionButton.textContent = 'Parar Monitoramento';
-        actionButton.className = 'stop';
-        actionButton.classList.remove('hidden');
-    } else if (isMonitoringActive === false && document.getElementById('dashboard').classList.contains('hidden') === false) {
-        actionButton.textContent = 'Voltar ao Início';
-        actionButton.className = 'restart';
-        actionButton.classList.remove('hidden');
-    } else {
-        actionButton.classList.add('hidden');
-    }
-    if (klines && klines.length > 0) {
-        const labels = klines.map(k => new Date(k[0]).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
-        const prices = klines.map(k => parseFloat(k[4]));
-        priceChart.data.labels = labels;
-        priceChart.data.datasets[0].data = prices;
-        priceChart.options.scales.y.suggestedMin = null;
-        priceChart.options.scales.y.suggestedMax = null;
-        priceChart.update('none');
-    }
-    if (sessionStats) {
-        statsTotalTradesEl.textContent = sessionStats.totalTrades;
-        const winRate = sessionStats.totalTrades > 0 ? (sessionStats.wins / sessionStats.totalTrades) * 100 : 0;
-        statsWinRateEl.textContent = `${winRate.toFixed(1)}%`;
-        const profitFactor = sessionStats.totalLoss > 0 ? sessionStats.totalProfit / sessionStats.totalLoss : 0;
-        statsProfitFactorEl.textContent = profitFactor.toFixed(2);
-    }
+    if (price !== undefined && lastRsi !== undefined && symbol && lastSma !== undefined) {
+        statusPriceEl.classList.remove('positive', 'negative');
+        if (price > lastPrice && lastPrice !== 0) statusPriceEl.classList.add('positive');
+        if (price < lastPrice) statusPriceEl.classList.add('negative');
+
+        lastPrice = price;
+        statusSymbolEl.textContent = symbol;
+        statusRsiEl.textContent = lastRsi.toFixed(2);
+        statusMaEl.textContent = `$${lastSma.toFixed(2)}`;
+        statusPriceEl.textContent = `$${price.toFixed(2)}`;
+    }
+    if (portfolio) {
+        isOpenedEl.textContent = portfolio.isOpened ? 'Sim' : 'Não';
+        positionQtyEl.textContent = portfolio.cryptoBalance.toFixed(8);
+        buyPriceEl.textContent = `$${portfolio.lastBuyPrice.toFixed(2)}`;
+        totalProfitEl.textContent = `$${portfolio.totalProfitUsdt.toFixed(2)}`;
+        totalProfitEl.classList.remove('positive', 'negative');
+        if (portfolio.totalProfitUsdt > 0) totalProfitEl.classList.add('positive');
+        if (portfolio.totalProfitUsdt < 0) totalProfitEl.classList.add('negative');
+    }
+    if (balances) {
+        const usdtBalance = balances.find(b => b.asset === 'USDT')?.free || 0;
+        balanceUsdtEl.textContent = `$${parseFloat(usdtBalance).toFixed(2)}`;
+    }
+    const actionButton = document.getElementById('action-button');
+    if (portfolio && portfolio.isOpened) {
+        actionButton.textContent = 'Liquidar Posição';
+        actionButton.className = 'liquidate';
+        actionButton.classList.remove('hidden');
+    } else if (isMonitoringActive) {
+        actionButton.textContent = 'Parar Monitoramento';
+        actionButton.className = 'stop';
+        actionButton.classList.remove('hidden');
+    } else if (isMonitoringActive === false && document.getElementById('dashboard').classList.contains('hidden') === false) {
+        actionButton.textContent = 'Voltar ao Início';
+        actionButton.className = 'restart';
+        actionButton.classList.remove('hidden');
+    } else {
+        actionButton.classList.add('hidden');
+    }
+
+    if (klines && klines.length > 0) {
+        
+        const labels = klines.map(k => new Date(k[0]).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' }));
+        const prices = klines.map(k => parseFloat(k[4])); 
+
+        // Verifica se os arrays são válidos
+        if (labels.length > 0 && prices.length > 0 && prices.every(p => !isNaN(p))) {
+            // Atribui os NOVOS arrays
+            priceChart.data.labels = labels;
+            priceChart.data.datasets[0].data = prices;
+            
+            // --- AJUSTE FINAL ---
+            // Chama o update SEM animação e SEM resize()
+            priceChart.update('none'); 
+            // priceChart.resize(); // <-- REMOVA ou comente esta linha
+            // --- FIM AJUSTE FINAL ---
+
+            // Logs (opcional, pode remover se tudo funcionar)
+            // console.log('Dados no chart ANTES update (últimos 5):', { labels: priceChart.data.labels.slice(-5), data: priceChart.data.datasets[0].data.slice(-5) });
+            // console.log('Chart.update() chamado.'); 
+        } else {
+            console.error('ERRO: Labels ou Preços inválidos após processamento!', { labels, prices }); 
+        }
+
+    } else {
+        console.warn('Aviso: klines não recebidos ou vazios nesta atualização.'); 
+    }
+    
+    if (sessionStats) {
+        statsTotalTradesEl.textContent = sessionStats.totalTrades;
+        const winRate = sessionStats.totalTrades > 0 ? (sessionStats.wins / sessionStats.totalTrades) * 100 : 0;
+        statsWinRateEl.textContent = `${winRate.toFixed(1)}%`;
+        const profitFactor = sessionStats.totalLoss > 0 ? sessionStats.totalProfit / sessionStats.totalLoss : 0;
+        statsProfitFactorEl.textContent = profitFactor.toFixed(2);
+    }
 });

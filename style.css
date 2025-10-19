@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+/* Removido: @import url('...'); - Fontes são carregadas no HTML */
 
 :root {
     --bg-main: #101419;
@@ -11,81 +11,478 @@
     --color-negative: #cf222e;
 }
 
-.toggle-container {
-    display: flex;
-    justify-content: center;
-    gap: 40px;
-    margin-bottom: 30px;
+/* --- Ajustes Globais e de Layout --- */
+html, body {
+    height: 100vh; /* Usa a altura total da janela */
+    overflow: hidden; /* Evita barras de rolagem desnecessárias */
+    margin: 0; /* Garante sem margens */
 }
 
-html, body { height: 100%; overflow: hidden; }
-* { box-sizing: border-box; margin: 0; padding: 0; }
-body { font-family: 'Inter', sans-serif; background-color: var(--bg-main); color: var(--text-primary); font-size: 14px; display: flex; }
-.container { width: 100%; max-width: 1200px; margin: 0 auto; padding: 25px; display: flex; flex-direction: column; height: 100%; }
-.title-container { display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 10px; margin-bottom: 20px; flex-shrink: 0; }
-.logo-img { height: 40px; width: auto; }
-.title-container h1 { margin-bottom: 0; }
-h1 { text-align: center; color: var(--accent-color); font-weight: 500; letter-spacing: 2px; text-transform: uppercase; }
-h2 { font-weight: 500; color: var(--text-primary); font-size: 1.1em; }
-.hidden { display: none; }
-#dashboard { flex-grow: 1; display: flex; flex-direction: column; min-height: 0; }
-.panel-container { display: flex; gap: 20px; margin-bottom: 20px; }
-.panel-container:last-child { flex-grow: 1; min-height: 0; margin-bottom: 0; }
-.panel { background-color: var(--bg-panel); border: 1px solid var(--border-color); border-radius: 8px; padding: 20px; flex: 1; display: flex; flex-direction: column; }
-.panel-header { display: flex; align-items: center; gap: 10px; margin-bottom: 15px; border-bottom: 1px solid var(--border-color); padding-bottom: 10px; }
-.panel-header svg { stroke: var(--accent-color); }
-.data-point { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; font-size: 14px; }
-.data-point .label { color: var(--text-secondary); }
-.data-point .value { color: var(--text-primary); font-weight: 500; }
-.asset-display { display: flex; align-items: center; gap: 8px; }
-#asset-icon { width: 24px; height: 24px; }
-hr { border: none; height: 1px; background-color: var(--border-color); margin: 8px 0; }
-#status-content { flex-grow: 1; display: flex; flex-direction: column; }
-.price-container { margin-top: auto; padding-top: 15px; }
-.price-container .label { font-size: 1em; color: var(--text-secondary); text-align: right; display: block; }
-.price-value { font-size: 2.5em; font-weight: 700; text-align: right; transition: color 0.3s ease; }
-#chart-panel { flex: 2.5; }
-.chart-container { position: relative; flex-grow: 1; }
-#log-panel { flex: 1.5; display: flex; flex-direction: column; }
-#logs { flex-grow: 1; height: auto; overflow-y: auto; background-color: #010409; padding: 15px; border-radius: 6px; font-family: "SF Mono", "Courier New", Courier, monospace; font-size: 13px; display: flex; flex-direction: column-reverse; }
-#logs::-webkit-scrollbar { width: 8px; }
-#logs::-webkit-scrollbar-track { background: var(--bg-main); }
-#logs::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
-#logs::-webkit-scrollbar-thumb:hover { background: #555; }
-#logs p { margin-top: 5px; white-space: pre-wrap; }
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    font-family: 'Inter', sans-serif; /* Fonte carregada via HTML */
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    font-size: 14px;
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.container {
+    width: 100%;
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 25px;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    overflow: hidden;
+}
+
+.title-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-shrink: 0;
+}
+
+.logo-img {
+    height: 40px;
+    width: auto;
+}
+
+h1 {
+    text-align: center;
+    color: var(--accent-color);
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    margin-bottom: 0;
+}
+
+h2 {
+    font-weight: 500;
+    color: var(--text-primary);
+    font-size: 1.1em;
+}
+
+.hidden {
+    display: none !important;
+}
+
+/* --- Estilos do Setup --- */
+#setup {
+    text-align: center;
+    padding: 20px 0;
+    flex-shrink: 0;
+}
+
+.setup-group {
+    margin-bottom: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px;
+}
+
+.settings-grid {
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    width: 120px;
+}
+
+.input-group label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    margin-bottom: 5px;
+}
+
+.input-group input {
+    padding: 10px;
+    font-size: 16px;
+    width: 100%;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-main);
+    color: var(--text-primary);
+    text-align: center;
+}
+
+input::-webkit-outer-spin-button,
+input::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+}
+input[type=number] {
+    -moz-appearance: textfield;
+}
+
+.select-wrapper {
+    position: relative;
+    display: inline-block;
+}
+
+.select-wrapper::after {
+    content: '▼';
+    font-size: 12px;
+    color: var(--text-secondary);
+    position: absolute;
+    right: 15px;
+    top: 50%;
+    transform: translateY(-50%);
+    pointer-events: none;
+}
+
+#symbol-select {
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    appearance: none;
+    padding: 10px 40px 10px 15px;
+    font-size: 16px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-panel);
+    color: var(--text-primary);
+    cursor: pointer;
+}
+
+#start-button {
+    cursor: pointer;
+    background-color: var(--accent-color);
+    border: 1px solid var(--accent-color);
+    color: var(--bg-main);
+    font-weight: 600;
+    transition: background-color 0.2s ease;
+    padding: 10px 15px;
+    font-size: 16px;
+    border-radius: 6px;
+}
+
+#start-button:hover {
+    background-color: #ffdf4d;
+}
+
+.toggle-container {
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: flex-start;
+    gap: 20px;
+    margin-bottom: 30px;
+    flex-wrap: wrap;
+}
+
+.toggle-group {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+    color: var(--text-secondary);
+    width: 140px;
+    text-align: center;
+    font-size: 13px;
+}
+
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 28px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #30363d;
+    transition: .4s;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 20px;
+    width: 20px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+}
+
+input:checked + .slider {
+    background-color: var(--accent-color);
+}
+
+input:checked + .slider:before {
+    transform: translateX(22px);
+}
+
+.slider.round {
+    border-radius: 34px;
+}
+
+.slider.round:before {
+    border-radius: 50%;
+}
+
+/* --- Estilos do Dashboard (COM LAYOUT VERTICAL CORRIGIDO) --- */
+#dashboard {
+    flex-grow: 1; /* Ocupa o espaço RESTANTE no .container */
+    display: flex;
+    flex-direction: column; /* Empilha as linhas de painéis */
+    min-height: 0; /* ESSENCIAL */
+    gap: 20px; /* Espaço ENTRE as linhas */
+    overflow: hidden; /* Garante que nada vaze */
+}
+
+.panel-container {
+    display: flex; /* Linha de painéis */
+    gap: 20px; /* Espaço ENTRE painéis na mesma linha */
+    min-height: 0; /* Essencial para filhos flex */
+    align-items: stretch; /* Filhos (painéis) devem esticar */
+}
+
+/* --- CONTROLE EXPLÍCITO DAS LINHAS --- */
+.panel-container:first-child {
+    flex-grow: 0; /* PRIMEIRA LINHA NÃO CRESCE VERTICALMENTE */
+    flex-shrink: 0; /* PRIMEIRA LINHA NÃO ENCOLHE VERTICALMENTE */
+    /* Altura será definida pelo conteúdo */
+}
+
+.panel-container:last-child {
+    flex-grow: 1; /* SEGUNDA LINHA PEGA TODO O ESPAÇO RESTANTE */
+    min-height: 0; /* ESSENCIAL */
+    /* align-items: stretch; Já está na regra .panel-container geral */
+}
+/* --- FIM DO CONTROLE EXPLÍCITO --- */
+
+
+.panel {
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 20px;
+    flex: 1; /* Painéis dividem espaço HORIZONTALMENTE */
+    display: flex;
+    flex-direction: column;
+    min-height: 0; /* ESSENCIAL para conteúdo interno crescer/encolher */
+    overflow: hidden; /* Garante que conteúdo interno não vaze */
+}
+
+/* Garante que o CONTEÚDO dentro dos painéis possa crescer e rolar */
+#status-content,
+.portfolio-content, /* Usando a classe adicionada no HTML */
+.chart-container,
+#logs {
+    flex-grow: 1; /* Permite crescer para preencher o painel */
+    min-height: 0; /* Permite encolher se necessário */
+    overflow: auto; /* Adiciona scroll SE necessário DENTRO dessas áreas */
+    display: flex; /* Necessário para usar margin-top: auto nos filhos */
+    flex-direction: column; /* Empilha o conteúdo */
+}
+
+/* Exceções: Gráfico e Status não devem rolar internamente */
+.chart-container,
+#status-content {
+    overflow: hidden;
+}
+
+/* Logs devem rolar */
+#logs {
+    overflow-y: auto;
+}
+
+
+/* Elementos que NÃO devem crescer ou encolher desnecessariamente */
+.panel-header,
+hr { /* Removido .data-point daqui */
+    flex-shrink: 0;
+}
+/* .price-container e #action-button já têm flex-shrink:0 abaixo */
+
+
+/* Ajustes específicos para painéis (proporção horizontal) */
+#chart-panel {
+    flex: 2.5;
+}
+
+#log-panel {
+    flex: 1.5;
+}
+
+/* --- Ajustes de Alinhamento Interno dos Painéis --- */
+.data-point {
+    display: flex;
+    align-items: center;
+    padding: 8px 0;
+    font-size: 14px;
+    flex-shrink: 0; /* Garante que os data-points não sejam espremidos */
+}
+
+.data-point .label {
+    color: var(--text-secondary);
+    margin-right: 1em; /* Mantém o espaço */
+    white-space: nowrap;
+    flex-shrink: 0; /* Impede o label de encolher */
+}
+
+.data-point .value {
+    color: var(--text-primary);
+    font-weight: 500;
+    text-align: right; /* Mantém texto à direita */
+    flex-grow: 1; /* Faz o valor ocupar o espaço restante */
+    min-width: 0; /* Permite encolher se necessário */
+}
+
+/* Garante alinhamento específico para o ícone/nome do ativo */
+.asset-display {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end; /* Alinha o conteúdo (ícone + texto) à direita */
+    gap: 8px;
+    flex-grow: 1; /* Ocupa espaço */
+}
+
+/* Limita o tamanho do ícone da criptomoeda */
+#asset-icon {
+    width: 24px;   /* Define uma largura fixa */
+    height: 24px;  /* Define uma altura fixa */
+    object-fit: contain; /* Garante que a imagem caiba sem distorcer */
+    flex-shrink: 0; /* Impede o ícone de encolher */
+}
+
+/* Ajuste Fino no `.price-container` (Dentro do Status) */
+.price-container {
+    margin-top: auto; /* EMPURRA PARA BAIXO */
+    padding-top: 15px;
+    flex-shrink: 0;
+    text-align: right; /* Alinha todo o conteúdo à direita */
+}
+
+.price-container .label {
+    font-size: 1em;
+    color: var(--text-secondary);
+    display: block; /* Garante que fique em linha separada */
+    margin-right: 0; /* Remove margem desnecessária herdada */
+}
+
+.price-value {
+    font-size: 2.5em;
+    font-weight: 700;
+    /* text-align: right; <-- Removido daqui, já está no pai */
+    transition: color 0.3s ease;
+}
+
+/* Força o Chart.js a respeitar o container */
+.chart-container canvas {
+    display: block; /* Remove espaço extra abaixo do canvas */
+    max-width: 100%;
+    max-height: 100%;
+    height: 100% !important; /* Força altura */
+    width: 100% !important; /* Força largura */
+}
+
+
+/* Estilos dos logs */
+#logs {
+    background-color: #010409;
+    padding: 15px;
+    border-radius: 6px;
+    font-family: "SF Mono", "Courier New", Courier, monospace;
+    font-size: 13px;
+    display: flex;
+    flex-direction: column-reverse; /* Logs mais recentes em cima */
+}
+
+#logs::-webkit-scrollbar {
+    width: 8px;
+}
+#logs::-webkit-scrollbar-track {
+    background: var(--bg-main);
+}
+#logs::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 4px;
+}
+#logs::-webkit-scrollbar-thumb:hover {
+    background: #555;
+}
+#logs p {
+    margin-top: 5px;
+    white-space: pre-wrap;
+}
 .log-default { color: var(--text-secondary); }
 .log-buy { color: #58a6ff; }
 .log-sell-profit { color: var(--color-positive); }
 .log-sell-loss { color: var(--color-negative); }
 .log-error { color: var(--color-negative); font-weight: bold; }
-#setup { text-align: center; padding: 40px; }
-.setup-group { margin-bottom: 20px; display: flex; justify-content: center; align-items: center; gap: 10px;}
-.settings-grid { display: flex; justify-content: center; gap: 20px; margin-bottom: 30px; }
-.input-group { display: flex; flex-direction: column; text-align: left; }
-.input-group label { font-size: 12px; color: var(--text-secondary); margin-bottom: 5px; }
-.input-group input { padding: 10px; font-size: 16px; width: 120px; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--bg-main); color: var(--text-primary); text-align: center; }
-input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-input[type=number] { -moz-appearance: textfield; }
-.select-wrapper { position: relative; display: inline-block; }
-.select-wrapper::after { content: '▼'; font-size: 12px; color: var(--text-secondary); position: absolute; right: 15px; top: 50%; transform: translateY(-50%); pointer-events: none; }
-#symbol-select { -webkit-appearance: none; -moz-appearance: none; appearance: none; padding: 10px 40px 10px 15px; font-size: 16px; border-radius: 6px; border: 1px solid var(--border-color); background-color: var(--bg-panel); color: var(--text-primary); cursor: pointer; }
-#start-button { cursor: pointer; background-color: var(--accent-color); border-color: var(--accent-color); color: var(--bg-main); font-weight: 600; transition: background-color 0.2s ease; padding: 10px 15px; font-size: 16px; border-radius: 6px; }
-#start-button:hover { background-color: #ffdf4d; }
+
+/* Indicadores de preço e lucro */
 .positive { color: var(--color-positive) !important; }
 .negative { color: var(--color-negative) !important; }
-.toggle-group { display: flex; justify-content: center; align-items: center; gap: 15px; margin-bottom: 30px; color: var(--text-secondary); }
-.switch { position: relative; display: inline-block; width: 50px; height: 28px; }
-.switch input { opacity: 0; width: 0; height: 0; }
-.slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #30363d; transition: .4s; }
-.slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; }
-input:checked + .slider { background-color: var(--accent-color); }
-input:checked + .slider:before { transform: translateX(22px); }
-.slider.round { border-radius: 34px; }
-.slider.round:before { border-radius: 50%; }
-#action-button { margin-top: auto; padding: 10px; font-size: 14px; font-weight: 600; border-radius: 6px; cursor: pointer; transition: all 0.2s ease; }
-#action-button.liquidate { border: 1px solid var(--color-negative); background-color: transparent; color: var(--color-negative); }
-#action-button.liquidate:hover { background-color: var(--color-negative); color: var(--text-primary); }
-#action-button.stop { border: 1px solid var(--accent-color); background-color: transparent; color: var(--accent-color); }
-#action-button.stop:hover { background-color: var(--accent-color); color: var(--bg-main); }
-#action-button.restart { border: 1px solid #58a6ff; background-color: transparent; color: #58a6ff; }
-#action-button.restart:hover { background-color: #58a6ff; color: var(--bg-main); }
+
+/* Botão de Ação (Parar/Liquidar/Reiniciar) */
+#action-button {
+    margin-top: auto; /* Empurra para baixo DENTRO do .portfolio-content */
+    padding: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0; /* NÃO ENCOLHE */
+}
+#action-button.liquidate {
+    border: 1px solid var(--color-negative);
+    background-color: transparent;
+    color: var(--color-negative);
+}
+#action-button.liquidate:hover {
+    background-color: var(--color-negative);
+    color: var(--text-primary);
+}
+#action-button.stop {
+    border: 1px solid var(--accent-color);
+    background-color: transparent;
+    color: var(--accent-color);
+}
+#action-button.stop:hover {
+    background-color: var(--accent-color);
+    color: var(--bg-main);
+}
+#action-button.restart {
+    border: 1px solid #58a6ff;
+    background-color: transparent;
+    color: #58a6ff;
+}
+#action-button.restart:hover {
+    background-color: #58a6ff;
+    color: var(--bg-main);
+}
