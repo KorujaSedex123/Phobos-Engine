@@ -24,6 +24,7 @@ const statsWinRateEl = document.getElementById('stats-win-rate');
 const statsProfitFactorEl = document.getElementById('stats-profit-factor');
 const maFilterToggle = document.getElementById('ma-filter-toggle');
 const maExitFilterToggle = document.getElementById('ma-exit-filter-toggle');
+const openTestingButton = document.getElementById('open-testing-button');
 
 let lastPrice = 0;
 
@@ -62,6 +63,10 @@ const priceChart = new Chart(ctx, {
         }
     }
 });
+openTestingButton.addEventListener('click', () => {
+    console.log("Botão 'Análise Avançada' clicado. Enviando pedido para main..."); // Log para depuração
+    ipcRenderer.send('open-testing-window'); // Envia uma mensagem para o main.js
+});
 const p = document.createElement('p');
 p.textContent = `[${new Date().toLocaleTimeString()}] Bem-vindo ao Phobos Engine! Por favor, selecione um ativo para iniciar.`;
 p.className = 'log-default';
@@ -89,6 +94,7 @@ ipcRenderer.on('symbols-loaded', (event, symbols) => {
 
 startButton.addEventListener('click', () => {
     const selectedSymbol = symbolSelect.value;
+    const selectedEnvironment = document.querySelector('input[name="environment"]:checked')?.value || 'production';
     if (selectedSymbol) {
         const settings = {
             symbol: selectedSymbol,
@@ -98,7 +104,8 @@ startButton.addEventListener('click', () => {
             trailingStopPercentage: parseFloat(tslInput.value),
             useTrailingStop: trailingStopToggle.checked,
             useMaFilter: maFilterToggle.checked,
-            useMaExitFilter: maExitFilterToggle.checked
+            useMaExitFilter: maExitFilterToggle.checked,
+            environment: selectedEnvironment
         };
         document.getElementById('setup').classList.add('hidden');
         document.getElementById('dashboard').classList.remove('hidden');

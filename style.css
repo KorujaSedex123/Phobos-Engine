@@ -164,7 +164,8 @@ input[type=number] {
     cursor: pointer;
 }
 
-#start-button {
+#start-button, 
+.run-button {
     cursor: pointer;
     background-color: var(--accent-color);
     border: 1px solid var(--accent-color);
@@ -176,8 +177,18 @@ input[type=number] {
     border-radius: 6px;
 }
 
-#start-button:hover {
+#start-button:hover, .run-button:hover {
     background-color: #ffdf4d;
+}
+.run-button:disabled {
+    background-color: var(--border-color);
+    border-color: var(--border-color);
+    color: var(--text-secondary);
+    cursor: not-allowed;
+}
+
+#open-testing-button:hover {
+    background-color: var(--border-color); /* Um pouco mais claro no hover */
 }
 
 .toggle-container {
@@ -485,4 +496,164 @@ hr { /* Removido .data-point daqui */
 #action-button.restart:hover {
     background-color: #58a6ff;
     color: var(--bg-main);
+}
+
+/* --- Estilos Específicos para testing.html --- */
+
+/* Garante que o body da janela de teste possa ter scroll */
+body.testing-window {
+    display: block; /* Remove o display flex herdado */
+    height: auto;
+    min-height: 100vh; /* Garante altura mínima */
+    overflow-y: auto; /* Permite scroll vertical */
+}
+
+/* Ajusta o container principal na janela de teste */
+.testing-window .container {
+    max-width: 950px; /* Ou o tamanho que preferir */
+    height: auto;
+    overflow: visible; /* Remove overflow hidden herdado */
+    flex-direction: column; /* Garante empilhamento vertical */
+    padding-top: 20px;
+    padding-bottom: 40px; /* Mais espaço no fundo */
+}
+
+/* Ajusta o título principal */
+.testing-window h1 {
+    font-size: 1.8em; /* Um pouco maior talvez */
+    margin-bottom: 30px;
+}
+
+
+/* Estilo base das secções de teste */
+.test-section {
+    background-color: var(--bg-panel);
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    padding: 25px;
+    margin-bottom: 30px; /* Mais espaço entre secções */
+    box-shadow: 0 3px 6px rgba(0,0,0,0.1); /* Sombra suave */
+}
+
+/* Títulos das secções (H3) */
+.test-section h3 {
+    color: var(--accent-color);
+    margin: 0 0 15px 0; /* Remove margem de cima */
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 500;
+    font-size: 1.3em;
+}
+
+/* Descrição abaixo do título */
+.test-section p {
+    font-size: 14px; /* Tamanho um pouco maior */
+    color: var(--text-secondary);
+    margin-bottom: 25px; /* Mais espaço antes dos inputs */
+    line-height: 1.5;
+}
+
+/* Linha de formulário */
+.form-row {
+    display: flex;
+    gap: 25px; /* Espaço entre grupos na mesma linha */
+    margin-bottom: 20px;
+    align-items: flex-end; /* Alinha pela base */
+    flex-wrap: wrap; /* Permite quebrar linha se não couber */
+}
+
+/* Grupo Label + Input */
+.form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px; /* Espaço entre label e input */
+}
+
+.form-group label {
+    font-size: 13px;
+    color: var(--text-secondary);
+    font-weight: 500; /* Leve negrito */
+}
+
+/* Estilo consistente para inputs e select */
+.form-group input[type="date"],
+.form-group input[type="number"],
+.form-group select {
+    padding: 10px 12px; /* Mais padding */
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid var(--border-color);
+    background-color: var(--bg-main); /* Fundo mais escuro */
+    color: var(--text-primary);
+    min-width: 180px; /* Largura mínima */
+}
+/* Placeholder para date input */
+input[type="date"]::-webkit-input-placeholder { color: var(--text-secondary); }
+input[type="date"]::-moz-placeholder { color: var(--text-secondary); opacity: 1; }
+input[type="date"]:-ms-input-placeholder { color: var(--text-secondary); }
+input[type="date"]::placeholder { color: var(--text-secondary); }
+
+
+/* Área de resultados */
+.results-area h4 {
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+.results-area pre {
+    background-color: #010409;
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 15px;
+    font-family: "SF Mono", "Courier New", Courier, monospace;
+    font-size: 13px;
+    color: #c9d1d9; /* Cor ligeiramente diferente para o texto do resultado */
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    max-height: 400px;
+    overflow-y: auto;
+}
+
+/* Span de Status (ao lado do botão) */
+#oos-status {
+     margin-left: 15px;
+     font-style: italic;
+     color: var(--text-secondary);
+     line-height: 38px; /* Alinha verticalmente com o botão (ajustar padding do botão se necessário) */
+}
+
+/* Área de Logs de Teste */
+#testing-logs {
+     background-color: #010409;
+     border: 1px solid var(--border-color);
+     border-radius: 6px;
+     padding: 15px;
+     min-height: 150px;
+     max-height: 350px; /* Aumenta um pouco a altura máxima */
+     overflow-y: auto;
+     font-family: "SF Mono", "Courier New", Courier, monospace;
+     font-size: 13px;
+     color: var(--text-secondary);
+     display: flex;
+     flex-direction: column-reverse;
+     margin-top: 10px; /* Espaço acima */
+}
+#testing-logs p { margin-top: 5px; white-space: pre-wrap; line-height: 1.4; }
+.log-default { color: var(--text-secondary); }
+.log-info { color: #58a6ff; } /* Azul para info */
+.log-success { color: var(--color-positive); } /* Verde para sucesso */
+.log-error { color: var(--color-negative); font-weight: bold; } /* Vermelho para erro */
+
+.testing-html,
+.testing-window {
+    overflow: auto !important; /* Força o scroll a ser permitido */
+    height: auto; /* Remove altura fixa se houver */
+    min-height: 100%; /* Garante que o body possa crescer */
+}
+
+/* Garante que o container não restrinja a altura desnecessariamente */
+.testing-window .container {
+    min-height: 100vh; /* O container deve ter pelo menos a altura da janela */
+    height: auto;      /* Mas pode crescer mais */
+    overflow: visible; /* Mantém como estava */
 }

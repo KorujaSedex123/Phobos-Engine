@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html class="testing-html">
+<head>
+    <link rel="stylesheet" href="./style.css">
+    </head>
+<body class="testing-window"> <div class="container">
+        <h1>Análise Avançada</h1>
+
+        <div class="test-section">
+            <h3>Teste Out-of-Sample (OOS)</h3>
+            <p> </p>
+            <div class="form-row">
+                <div class="form-group">
+                    <label for="oos-symbol">Ativo:</label>
+                    <select id="oos-symbol">
+                        <option value="">Carregando...</option>
+                    </select>
+                </div>
+            </div>
+             <div class="form-row">
+                <div class="form-group">
+                    <label for="is-start-date">Início In-Sample (IS):</label>
+                    <input type="date" id="is-start-date" placeholder="dd/mm/aaaa">
+                </div>
+                 <div class="form-group">
+                    <label for="is-end-date">Fim In-Sample (IS):</label>
+                    <input type="date" id="is-end-date" placeholder="dd/mm/aaaa">
+                </div>
+            </div>
+             <div class="form-row">
+                 <div class="form-group">
+                    <label for="oos-start-date">Início Out-of-Sample (OOS):</label>
+                    <input type="date" id="oos-start-date" placeholder="dd/mm/aaaa">
+                </div>
+                <div class="form-group">
+                    <label for="oos-end-date">Fim Out-of-Sample (OOS):</label>
+                    <input type="date" id="oos-end-date" placeholder="dd/mm/aaaa">
+                </div>
+            </div>
+            <div class="form-row">
+                 <button id="run-oos-button" class="run-button">Executar Teste OOS</button>
+                 <span id="oos-status"></span> </div>
+            <div id="oos-results-area" class="results-area hidden">
+                 <h4>Resultados OOS:</h4>
+                 <pre id="oos-metrics"></pre>
+            </div>
+        </div>
+
+        <div class="test-section">
+            <h3>Simulação de Monte Carlo</h3>
+             <p> </p>
+            <button class="run-button" disabled>Executar Monte Carlo</button>
+        </div>
+
+        <div class="test-section">
+            <h3>Logs da Análise</h3>
+            <div id="testing-logs">
+                <p>A aguardar início dos testes...</p>
+            </div>
+        </div>
+
+    </div>
+    <script src="./testing-renderer.js"></script>
+</body>
+</html>

@@ -54,7 +54,9 @@ async function start(settings, isRestoring = false) {
                 sessionStats = { totalTrades: 0, wins: 0, losses: 0, totalProfit: 0, totalLoss: 0 };
                 sessionSettings = { ...settings, maPeriod: config.maPeriod, rsiPeriod: config.rsiPeriod };
         }
-
+        const activeEnvironment = sessionSettings.environment || 'production'; // Pega dos settings combinados
+        ui.log(`--- Iniciando sessão no ambiente: ${activeEnvironment.toUpperCase()} ---`);
+        
         ui.log(`Ativo ${sessionSettings.symbol} selecionado.`);
         ui.log(`Buscando informações da carteira...`);
 
@@ -280,10 +282,10 @@ async function liquidatePosition(reason = "MANUAL") {
 }
 
 module.exports = {
-    init,
-    start,
-    stop,
-    liquidatePosition,
-    getState,
-    getStatusCommand
+        init,
+        start,
+        stop,
+        liquidatePosition,
+        getState,
+        getStatusCommand
 };
