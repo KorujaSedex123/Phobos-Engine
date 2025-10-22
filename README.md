@@ -56,14 +56,12 @@ Para executar o Phobos Engine, siga os passos abaixo.
 git clone [https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git](https://github.com/SEU_USUARIO/SEU_REPOSITORIO.git)
 cd SEU_REPOSITORIO
 
-2. Instalar as Dependências
-Bash
-
-npm install
-3. Configurar as Chaves Secretas (.env)
-Crie um ficheiro chamado .env na raiz do projeto e adicione as suas chaves:
-
-Snippet de código
+### 2. Instalar as Dependências
+* Bash
+* npm install
+### 3. Configurar as Chaves Secretas (.env)
+* Crie um ficheiro chamado .env na raiz do projeto e adicione as suas chaves:
+* Snippet de código
 
 # Credenciais da Binance (para trading real)
 API_KEY=SUA_CHAVE_DE_API_REAL_DA_BINANCE
@@ -74,23 +72,23 @@ DISCORD_BOT_TOKEN=TOKEN_DO_SEU_BOT_DO_DISCORD
 DISCORD_USER_ID=SEU_ID_DE_USUARIO_DO_DISCORD
 Chaves da Binance: Devem ter permissão para "Habilitar Leitura" e "Ativar Trading Spot e de Margem".
 
-4. Ajustar a Estratégia (config.json)
-O ficheiro config.json contém as configurações padrão da estratégia. Pode ajustá-las aqui ou diretamente na interface do bot antes de iniciar.
+# 4. Ajustar a Estratégia (config.json)
+* O ficheiro config.json contém as configurações padrão da estratégia. Pode ajustá-las aqui ou diretamente na interface do bot antes de iniciar.
 
-▶️ Como Executar
-Modo de Desenvolvimento
-Para iniciar o aplicativo no modo de desenvolvimento:
+# ▶️ Como Executar
+* Modo de Desenvolvimento
+* Para iniciar o aplicativo no modo de desenvolvimento:
 
-Bash
+* Bash
 
-npm start
-Gerar o Executável
-Para empacotar o bot num ficheiro .exe instalável (para Windows):
+* npm start
+* Gerar o Executável
+* Para empacotar o bot num ficheiro .exe instalável (para Windows):
 
-Bash
+* Bash
 
-npm run dist
-O instalador será gerado na pasta dist/. Após instalar, lembre-se de copiar os ficheiros .env e config.json para a pasta de instalação do programa.
+ * npm run dist
+* O instalador será gerado na pasta dist/. Após instalar, lembre-se de copiar os ficheiros .env e config.json para a pasta de instalação do programa.
 
-⚠️ Aviso Legal
-Este projeto é para fins educacionais. O trading de criptomoedas envolve um risco financeiro significativo. Não me responsabilizo por quaisquer perdas financeiras que possam ocorrer com o uso deste bot. Use por sua conta e risco e comece com valores que esteja disposto a perder.
+## ⚠️ Aviso Legal
+* Este projeto é para fins educacionais. O trading de criptomoedas envolve um risco financeiro significativo. Não me responsabilizo por quaisquer perdas financeiras que possam ocorrer com o uso deste bot. Use por sua conta e risco e comece com valores que esteja disposto a perder.
