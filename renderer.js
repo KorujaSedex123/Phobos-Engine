@@ -24,7 +24,6 @@ const statsWinRateEl = document.getElementById('stats-win-rate');
 const statsProfitFactorEl = document.getElementById('stats-profit-factor');
 const maFilterToggle = document.getElementById('ma-filter-toggle');
 const maExitFilterToggle = document.getElementById('ma-exit-filter-toggle');
-const openTestingButton = document.getElementById('open-testing-button');
 
 let lastPrice = 0;
 
@@ -63,10 +62,7 @@ const priceChart = new Chart(ctx, {
         }
     }
 });
-openTestingButton.addEventListener('click', () => {
-    console.log("Botão 'Análise Avançada' clicado. Enviando pedido para main..."); // Log para depuração
-    ipcRenderer.send('open-testing-window'); // Envia uma mensagem para o main.js
-});
+
 const p = document.createElement('p');
 p.textContent = `[${new Date().toLocaleTimeString()}] Bem-vindo ao Phobos Engine! Por favor, selecione um ativo para iniciar.`;
 p.className = 'log-default';

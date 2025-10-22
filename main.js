@@ -8,11 +8,9 @@ const stateManager = require('./modules/stateManager');
 const binanceService = require('./modules/binanceService');
 const discordService = require('./modules/discordService');
 const tradingEngine = require('./modules/tradingEngine');
-const advancedTester = require('./modules/advancedTester');
 const config = require('./config.json');
 
 let mainWindow;
-let testingWindow;
 
 function createWindow() {
     mainWindow = new BrowserWindow({
@@ -143,79 +141,7 @@ ipcMain.on('primary-action-button-clicked', () => {
     }
 });
 
-// --- Função para criar a Janela de Teste (MANTÉM) ---
-function createTestingWindow() {
-    if (testingWindow) {
-        testingWindow.focus();
-        return;
-    }
-    testingWindow = new BrowserWindow({
-        width: 1000,
-        height: 700,
-        title: "Phobos Engine - Análise Avançada",
-        webPreferences: {
-            nodeIntegration: true,
-            contextIsolation: false
-        }
-    });
 
-    testingWindow.loadFile('testing.html');
-    testingWindow.on('closed', () => { testingWindow = null; });
-    // Opcional: Remover a barra de menu da janela de teste, se não a quiser
-    // testingWindow.setMenuBarVisibility(false);
 
-    testingWindow.on('closed', () => {
-        testingWindow = null;
-    });
-}
-// --- FIM Função Janela de Teste -
 
-ipcMain.on('open-testing-window', () => {
-    console.log("Recebido pedido 'open-testing-window'. Chamando createTestingWindow..."); // Log para depuração
-    createTestingWindow(); // Chama a função que cria a nova janela
-});
-ipcMain.on('request-symbol-list-for-testing', async (event) => {
-    try {
-        const symbols = await binanceService.getSymbolList();
-        // Garante que a janela ainda existe antes de enviar
-        if (testingWindow && !testingWindow.isDestroyed()) {
-            testingWindow.webContents.send('symbols-loaded-for-testing', symbols);
-        }
-    } catch (error) {
-        console.error("Erro ao buscar símbolos para janela de teste:", error);
-        if (testingWindow && !testingWindow.isDestroyed()) {
-            testingWindow.webContents.send('test-error', "Falha ao carregar lista de símbolos.");
-        }
-    }
-});
-// Executa o Teste OOS (MODIFICADO)
-ipcMain.on('run-oos-test', async (event, testConfig) => {
-    // Cria um logger específico para esta execução
-    const testLogger = {
-        log: (message) => {
-            console.log(`[TEST LOG] ${message}`); // Log no console principal
-            if (testingWindow && !testingWindow.isDestroyed()) {
-                testingWindow.webContents.send('log-testing-message', message); // Envia para a janela de teste
-            }
-        }
-    };
 
-    try {
-        testLogger.log(`Iniciando Teste Out-of-Sample para ${testConfig.symbol}...`);
-        // Passa o logger para a função
-        const results = await advancedTester.performOOSTest(testConfig, testLogger);
-        if (testingWindow && !testingWindow.isDestroyed()) {
-            testingWindow.webContents.send('oos-test-results', results);
-        }
-        // testLogger.log("Teste OOS concluído com sucesso."); // O renderer já faz isso
-    } catch (error) {
-        console.error("Erro durante Teste OOS:", error);
-        const errorMsg = error.message || "Erro desconhecido";
-        // Usa o logger para enviar o erro para a janela de teste
-        testLogger.log(`ERRO no Teste OOS: ${errorMsg}`);
-        if (testingWindow && !testingWindow.isDestroyed()) {
-            // Pode opcionalmente enviar um evento de erro específico também
-            testingWindow.webContents.send('test-error', `Erro no Teste OOS: ${errorMsg}`);
-        }
-    }
-});
