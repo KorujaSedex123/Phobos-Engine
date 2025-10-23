@@ -10,7 +10,6 @@
   "stopLossPercentage": 2,
   "trailingStopPercentage": 1.5,
   "apiUrlProduction": "https://api.binance.com",   
-  "apiUrlTestnet": "https://testnet.binance.vision", 
   "apiUrl": "https://api.binance.com",
   "checkInterval": 3000
 }
